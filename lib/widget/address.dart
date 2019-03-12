@@ -23,6 +23,8 @@ class AddressScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0.0,
         backgroundColor: Colors.cyan,
+        leading: BackButton(color: Colors.white),
+        title: Text('Address', style: TextStyle(color: Colors.white)),
       ),
       body: Column(
         children: <Widget>[
@@ -34,7 +36,6 @@ class AddressScreen extends StatelessWidget {
                   width: MediaQuery.of(context).size.width,
                   child: Column(
                     children: <Widget>[
-                      Text('Address:'),
                       Container(
                         margin: EdgeInsets.only(top: 10),
                         child: Text(

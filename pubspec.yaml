@@ -22,6 +22,9 @@ dependencies:
   qr_flutter: ^1.1.1
   package_info: ^0.4.0+2
   ontology_dart_sdk: ^1.0.2
+  validators: ^1.0.0+1
+  flutter_secure_storage: ^3.2.0
+  webview_flutter: ^0.3.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

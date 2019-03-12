@@ -87,13 +87,13 @@ class _HomeState extends State<HomeScreen> {
             _curIdx = idx;
           });
         },
-        currentIndex: _curIdx, // this will be set when a new tab is tapped
+        currentIndex: _curIdx,
         items: [
           BottomNavigationBarItem(
             icon: _FixedSizeImg('graphics/tab_asset_un_selected.png', 25),
             activeIcon: _FixedSizeImg('graphics/tab_asset_selected.png', 25),
             title: Text(
-              'Asset',
+              'Assets',
               style: TextStyle(color: const Color(0xFF06244e), fontSize: 13.0),
             ),
           ),
@@ -101,7 +101,7 @@ class _HomeState extends State<HomeScreen> {
             icon: _FixedSizeImg('graphics/tab_game_unselect.png', 25),
             activeIcon: _FixedSizeImg('graphics/tab_game_select.png', 25),
             title: Text(
-              'DApp',
+              'DApps',
               style: TextStyle(color: const Color(0xFF06244e), fontSize: 13.0),
             ),
           ),
@@ -109,12 +109,11 @@ class _HomeState extends State<HomeScreen> {
               icon: _FixedSizeImg('graphics/tab_me_un_selected.png', 25),
               activeIcon: _FixedSizeImg('graphics/tab_me_selected.png', 25),
               title: Text(
-                'Setting',
+                'Settings',
                 style:
                     TextStyle(color: const Color(0xFF06244e), fontSize: 13.0),
               ))
         ],
-
         fixedColor: Color(0xff6E6F70),
         type: BottomNavigationBarType.fixed,
       ),

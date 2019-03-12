@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'address.dart';
+import 'package:ontology_dart_sdk/network.dart';
+import 'package:ontology_dart_sdk/crypto.dart';
 
 class AssetWidget extends StatefulWidget {
   @override
@@ -16,6 +18,23 @@ class _AssetState extends State<AssetWidget> {
     'MYT',
     'LCY',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _queryBalance();
+  }
+
+  Future<void> _queryBalance() async {
+    print('querying balance...');
+    var rpc = WebsocketRpc('ws://polaris1.ont.io:20335');
+    rpc.connect();
+    var res = await rpc.getNodeCount();
+    print(res);
+    var prikey = PrivateKey.fromHex(
+        'e467a2a9c9f56b012c71cf2270df42843a9d7ff181934068b4a62bcdd570e8be');
+    print(await prikey.getWif());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +296,6 @@ class _ListItemToken extends StatelessWidget {
     }
 
     return ListTile(
-      // title: null,
       title: Container(
         height: 50,
         decoration: new BoxDecoration(

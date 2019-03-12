@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
 import 'select_node.dart';
+import 'webview.dart';
 
 class SettingWidget extends StatefulWidget {
   @override
@@ -38,11 +39,11 @@ class _SettingState extends State<SettingWidget> {
                 itemExtent: 50,
                 children: <Widget>[
                   _SettingItem(
-                    name: 'ONT ID Manage',
+                    name: 'ONT Identities',
                     icon: 'graphics/tab_id_un_selected.png',
                   ),
                   _SettingItem(
-                    name: 'Net Setting',
+                    name: 'Network',
                     icon: 'graphics/system_setting.png',
                   ),
                 ],
@@ -109,10 +110,15 @@ class _SettingItem extends StatelessWidget {
       ),
       subtitle: null,
       onTap: () {
-        if (name == 'Net Setting') {
+        if (name == 'Network') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => NodeSelectionScreen()),
+          );
+        } else if (name == 'ONT Identities') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WebViewScreen()),
           );
         }
       },
