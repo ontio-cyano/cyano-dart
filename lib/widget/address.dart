@@ -3,10 +3,10 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import 'toast.dart';
 
-class AddressWidget extends StatelessWidget {
+class AddressScreen extends StatelessWidget {
   final String address;
 
-  AddressWidget(this.address);
+  AddressScreen(this.address);
 
   Future<void> _copy() async {
     try {

@@ -4,16 +4,18 @@ import 'package:barcode_scan/barcode_scan.dart';
 import 'asset.dart';
 import 'holder.dart';
 import 'setting.dart';
+import 'toast.dart';
 
-class HomeWidget extends StatefulWidget {
+class HomeScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return _HomeState();
   }
 }
 
-class _HomeState extends State<HomeWidget> {
+class _HomeState extends State<HomeScreen> {
   int _curIdx = 0;
+
   final List<Widget> _children = [
     AssetWidget(),
     HolderWidget(Colors.deepOrange),
@@ -21,8 +23,12 @@ class _HomeState extends State<HomeWidget> {
   ];
 
   Future<void> _scan() async {
-    String barcode = await BarcodeScanner.scan();
-    print(barcode);
+    try {
+      String barcode = await BarcodeScanner.scan();
+      print(barcode);
+    } catch (e) {
+      toastError('Unable to open camera');
+    }
   }
 
   @override
@@ -84,42 +90,24 @@ class _HomeState extends State<HomeWidget> {
         currentIndex: _curIdx, // this will be set when a new tab is tapped
         items: [
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'graphics/tab_asset_un_selected.png',
-              width: 25,
-            ),
-            activeIcon: Image.asset(
-              'graphics/tab_asset_selected.png',
-              width: 25,
-            ),
+            icon: _FixedSizeImg('graphics/tab_asset_un_selected.png', 25),
+            activeIcon: _FixedSizeImg('graphics/tab_asset_selected.png', 25),
             title: Text(
               'Asset',
               style: TextStyle(color: const Color(0xFF06244e), fontSize: 13.0),
             ),
           ),
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'graphics/tab_game_unselect.png',
-              width: 25,
-            ),
-            activeIcon: Image.asset(
-              'graphics/tab_game_select.png',
-              width: 25,
-            ),
+            icon: _FixedSizeImg('graphics/tab_game_unselect.png', 25),
+            activeIcon: _FixedSizeImg('graphics/tab_game_select.png', 25),
             title: Text(
               'DApp',
               style: TextStyle(color: const Color(0xFF06244e), fontSize: 13.0),
             ),
           ),
           BottomNavigationBarItem(
-              icon: Image.asset(
-                'graphics/tab_me_un_selected.png',
-                width: 25,
-              ),
-              activeIcon: Image.asset(
-                'graphics/tab_me_selected.png',
-                width: 25,
-              ),
+              icon: _FixedSizeImg('graphics/tab_me_un_selected.png', 25),
+              activeIcon: _FixedSizeImg('graphics/tab_me_selected.png', 25),
               title: Text(
                 'Setting',
                 style:
@@ -129,6 +117,25 @@ class _HomeState extends State<HomeWidget> {
 
         fixedColor: Color(0xff6E6F70),
         type: BottomNavigationBarType.fixed,
+      ),
+    );
+  }
+}
+
+class _FixedSizeImg extends StatelessWidget {
+  final String icon;
+  final double width;
+
+  _FixedSizeImg(this.icon, this.width);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: width,
+      child: Image.asset(
+        icon,
+        width: width,
       ),
     );
   }

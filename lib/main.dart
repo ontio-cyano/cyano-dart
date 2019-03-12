@@ -15,8 +15,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.cyan,
       ),
       home: SplashScreen(
-          seconds: 3,
-          navigateAfterSeconds: HomeWidget(),
+          seconds: 5,
+          navigateAfterSeconds: HomeScreen(),
           title: Text(
             'Cyano',
             style: TextStyle(color: Colors.white, fontSize: 25.0),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
+import 'select_node.dart';
 
 class SettingWidget extends StatefulWidget {
   @override
@@ -107,6 +108,14 @@ class _SettingItem extends StatelessWidget {
         ),
       ),
       subtitle: null,
+      onTap: () {
+        if (name == 'Net Setting') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NodeSelectionScreen()),
+          );
+        }
+      },
     );
   }
 }

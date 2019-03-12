@@ -21,48 +21,56 @@ class _AssetState extends State<AssetWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              flex: 8,
-              child: Container(
-                padding: EdgeInsets.only(left: 20),
-                color: Colors.cyan,
-                height: 40,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'ANt6oJMEZBwCLbg5Dd6Pg3pxAs7FbJHSRY',
-                    style: TextStyle(color: Colors.white, fontSize: 13),
+        Container(
+          width: MediaQuery.of(context).size.width,
+          height: 40,
+          color: Colors.cyan,
+          child: Stack(
+            children: <Widget>[
+              Positioned(
+                top: 0,
+                left: 20,
+                child: Container(
+                  color: Colors.cyan,
+                  height: 40,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'ANt6oJMEZBwCLbg5Dd6Pg3pxAs7FbJHSRY',
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Container(
-                color: Colors.cyan,
-                height: 40,
-                child: Container(
-                    margin: EdgeInsets.only(right: 18),
-                    child: Center(
-                      child: InkWell(
-                        child: Image.asset(
-                          'graphics/qrcode.png',
-                          width: 20,
+              Positioned(
+                top: 0,
+                right: 12,
+                child: InkWell(
+                  child: Container(
+                      color: Colors.cyan,
+                      height: 40,
+                      width: 40,
+                      // padding: EdgeInsets.only(right: 8),
+                      child: Center(
+                        child: InkWell(
+                          child: Image.asset(
+                            'graphics/qrcode.png',
+                            width: 20,
+                          ),
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AddressWidget(
-                                    'ANt6oJMEZBwCLbg5Dd6Pg3pxAs7FbJHSRY')),
-                          );
-                        },
-                      ),
-                    )),
-              ),
-            ),
-          ],
+                      )),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AddressScreen(
+                              'ANt6oJMEZBwCLbg5Dd6Pg3pxAs7FbJHSRY')),
+                    );
+                  },
+                ),
+              )
+            ],
+          ),
         ),
         Stack(
           children: <Widget>[
