@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:barcode_scan/barcode_scan.dart';
@@ -5,6 +6,8 @@ import 'asset.dart';
 import 'holder.dart';
 import 'setting.dart';
 import 'toast.dart';
+import 'wallet.dart';
+import '../model/wallet.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -13,14 +16,96 @@ class HomeScreen extends StatefulWidget {
   }
 }
 
-class _HomeState extends State<HomeScreen> {
+class _HomeState extends State<HomeScreen> with WidgetsBindingObserver {
   int _curIdx = 0;
+  var _preCached = false;
 
-  final List<Widget> _children = [
-    AssetWidget(),
-    HolderWidget(Colors.deepOrange),
-    SettingWidget()
+  List<Widget> _children = [
+    HolderWidget(Colors.white),
+    HolderWidget(Colors.white),
+    HolderWidget(Colors.white),
   ];
+
+  StreamSubscription<WalletCreatedEvent> _onWalletCreated;
+  StreamSubscription<WalletsResetEvent> _onWalletsReset;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _init();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+
+    if (_onWalletCreated != null) _onWalletCreated.cancel();
+    if (_onWalletsReset != null) _onWalletsReset.cancel();
+  }
+
+  void _observeWalletChanges() {
+    _onWalletCreated =
+        WalletManager.eventBus.on<WalletCreatedEvent>().listen((w) {
+      _initTabContents();
+    });
+    _onWalletsReset =
+        WalletManager.eventBus.on<WalletsResetEvent>().listen((w) {
+      _initTabContents();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // do something when resumed
+      _resetWallets();
+    }
+  }
+
+  Future<void> _init() async {
+    _observeWalletChanges();
+    await _initTabContents();
+  }
+
+  Future<void> _resetWallets() async {
+    var wm = await WalletManager.sington();
+    await wm.reset();
+  }
+
+  Future<void> _initTabContents() async {
+    var children = [
+      AssetWidget(),
+      HolderWidget(Colors.deepOrange),
+      SettingWidget()
+    ];
+    var wm = await WalletManager.sington();
+    if (wm.isEmpty) {
+      children[0] = CreateWalletWidget();
+    }
+    setState(() {
+      _children = children;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_preCached) _preCacheImage();
+  }
+
+  void _preCacheImage() async {
+    var urls = [
+      'graphics/tab_asset_un_selected.png',
+      'graphics/tab_game_select.png',
+      'graphics/tab_me_un_selected.png'
+    ];
+    for (final url in urls) {
+      await precacheImage(AssetImage(url), context);
+    }
+    _preCached = true;
+  }
 
   Future<void> _scan() async {
     try {
