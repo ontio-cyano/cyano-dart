@@ -118,7 +118,9 @@ class _SettingItem extends StatelessWidget {
         } else if (name == 'ONT Identities') {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => WebViewScreen()),
+            MaterialPageRoute(
+                builder: (context) => WebViewScreen(
+                    'https://auth.ont.io/#/mgmtHome?ontid=did:ont:Aaqase8cE4DkatKkvpQcJYaGVKvYSCPoFD')),
           );
         }
       },

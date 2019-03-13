@@ -1,70 +1,138 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 class WebViewScreen extends StatefulWidget {
+  final String title;
+  final String url;
+
+  const WebViewScreen(
+    this.url, {
+    Key key,
+    this.title = '',
+  }) : super(key: key);
+
   @override
-  State<StatefulWidget> createState() {
-    return _WebState();
-  }
+  _WebViewState createState() => new _WebViewState();
 }
 
-class _WebState extends State<WebViewScreen>
+class _WebViewState extends State<WebViewScreen>
     with SingleTickerProviderStateMixin {
-  final Completer<WebViewController> _wvController =
-      Completer<WebViewController>();
+  final _webViewPlugin = FlutterWebviewPlugin();
+  AnimationController _aniCtrl;
+  Animation _ani;
 
   @override
   void initState() {
     super.initState();
+    _webViewPlugin.onWebviewMessage.listen((message) {
+      print(message);
+    });
+    _webViewPlugin.onStateChanged.listen((state) async {
+      if (state.type == WebViewState.finishLoad) {
+        var disableZoom = "var meta = document.createElement('meta');" +
+            "meta.name = 'viewport';" +
+            "meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';" +
+            "var head = document.getElementsByTagName('head')[0];" +
+            "head.appendChild(meta);";
+        await _webViewPlugin.evalJavascript(disableZoom);
+        await _webViewPlugin.linkBridge();
+        _aniCtrl.forward(from: MediaQuery.of(context).size.width);
+      } else if (state.type == WebViewState.startLoad) {
+        _aniCtrl.forward(from: 0);
+      }
+    });
+    _webViewPlugin.onDestroy.listen((_) {
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    });
+    _aniCtrl =
+        AnimationController(duration: Duration(seconds: 10), vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final Animation curve =
+        CurvedAnimation(parent: _aniCtrl, curve: Curves.easeInOut);
+    _ani = Tween<double>(begin: 0, end: 1000).animate(curve)
+      ..addListener(() {
+        setState(() {});
+      });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          elevation: 0.0,
-          backgroundColor: Colors.white,
-          automaticallyImplyLeading: false,
-          leading: _BackButton(_wvController.future),
-          actions: <Widget>[_TerminateButton()],
-        ),
-        body: Column(
+    var appBar = AppBar(
+      title: Text(''),
+      backgroundColor: Colors.white,
+      leading: _BackButton(_webViewPlugin),
+      actions: <Widget>[
+        Container(
+          width: 60,
+          child: Center(
+            child: _TerminateButton(_webViewPlugin),
+          ),
+        )
+      ],
+    );
+
+    return WillPopScope(
+      onWillPop: () {
+        return Future.value(false);
+      },
+      child: Container(
+        child: Stack(
           children: <Widget>[
-            Expanded(
+            WebviewScaffold(
+              appBar: appBar,
+              url: widget.url,
+              hidden: true,
+              withZoom: false,
+              withJavascript: true,
+              withLocalStorage: true,
+            ),
+            appBar,
+            SafeArea(
               child: Stack(
                 children: <Widget>[
-                  WebView(
-                    initialUrl: 'https://www.baidu.com',
-                    javascriptMode: JavascriptMode.unrestricted,
-                    onWebViewCreated: (WebViewController webViewController) {
-                      _wvController.complete(webViewController);
-                    },
-                    javascriptChannels: <JavascriptChannel>[].toSet(),
-                    navigationDelegate: (NavigationRequest request) {
-                      return NavigationDecision.navigate;
-                    },
-                  ),
                   Positioned(
-                    top: 0,
-                    left: 0,
-                    width: MediaQuery.of(context).size.width,
-                    height: 1,
-                    child: Container(color: Colors.grey),
-                  ),
+                      top: appBar.preferredSize.height - 1,
+                      left: 0,
+                      width: MediaQuery.of(context).size.width,
+                      height: 1,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          width: _ani.value,
+                          height: 1,
+                          child: Container(color: Colors.cyan),
+                        ),
+                      ))
                 ],
               ),
             )
           ],
-        ));
+        ),
+      ),
+    );
   }
 
+  @override
   void dispose() {
+    _webViewPlugin.dispose();
+    _aniCtrl.dispose();
     super.dispose();
   }
 }
 
 class _TerminateButton extends StatelessWidget {
+  final FlutterWebviewPlugin _wv;
+
+  _TerminateButton(this._wv);
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -78,41 +146,28 @@ class _TerminateButton extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context);
+        _wv.close();
       },
     );
   }
 }
 
 class _BackButton extends StatelessWidget {
-  final Future<WebViewController> _webViewControllerFuture;
+  final FlutterWebviewPlugin _wv;
 
-  _BackButton(this._webViewControllerFuture)
-      : assert(_webViewControllerFuture != null);
+  _BackButton(this._wv);
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<WebViewController>(
-      future: _webViewControllerFuture,
-      builder:
-          (BuildContext context, AsyncSnapshot<WebViewController> snapshot) {
-        final bool webViewReady =
-            snapshot.connectionState == ConnectionState.done;
-        final WebViewController controller = snapshot.data;
-        return IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () async {
-            if (!webViewReady) {
-              Navigator.pop(context);
-              return;
-            }
-            if (await controller.canGoBack()) {
-              controller.goBack();
-              return;
-            }
-            Navigator.pop(context);
-          },
-        );
+    return IconButton(
+      icon: const Icon(Icons.arrow_back_ios),
+      onPressed: () async {
+        var prev = await _wv.evalJavascript('location.href');
+        await _wv.evalJavascript('window.history.go(-1);');
+        var after = await _wv.evalJavascript('location.href');
+        if (prev == after) {
+          _wv.close();
+        }
       },
     );
   }
