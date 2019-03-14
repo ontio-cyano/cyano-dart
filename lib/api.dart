@@ -31,6 +31,27 @@ Future<Balance> queryBalance(String addr) async {
   return b;
 }
 
+Future<void> transferNativeAsset(
+    String type, String from, String pwd, String to, BigInt amount) async {
+  var wm = await WalletManager.sington();
+  var fromAddr = await Address.fromBase58(from);
+  var toAddr = await Address.fromBase58(to);
+  var fromAcc = wm.findAccountByAddr(from);
+  var prikey = await fromAcc.decrypt(pwd);
+
+  var ob = OntAssetTxBuilder();
+  var tx = await ob.makeTransferTx(
+      type, fromAddr, toAddr, amount, 500, 2000000, fromAddr);
+
+  var txb = TxBuilder();
+  await txb.sign(tx, prikey);
+
+  var rpc = WebsocketRpc(await rpcAddress());
+  rpc.connect();
+  await rpc.sendRawTx(await tx.serialize(), preExec: false);
+  rpc.close();
+}
+
 Future<void> claimOng(String addr, String pwd) async {
   if (addr.isEmpty) return;
 

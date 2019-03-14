@@ -9,6 +9,8 @@ import 'package:cyano_dart/model/network.dart';
 import 'package:cyano_dart/widget/wallet/password.dart';
 import 'package:cyano_dart/widget/toast.dart';
 import 'webview.dart';
+import 'package:cyano_dart/model/oep4token.dart';
+import 'asset_transfer.dart';
 
 class AssetWidget extends StatefulWidget {
   @override
@@ -19,13 +21,7 @@ class AssetWidget extends StatefulWidget {
 
 class _AssetState extends State<AssetWidget>
     with WalletManagerObserver, NetworkManagerObserver {
-  final oep4Tokens = [
-    'TNT',
-    'OEP',
-    'HP',
-    'MYT',
-    'LCY',
-  ];
+  var _oep4Tokens = <Oep4Token>[];
 
   var _addr = '';
   var _ont = 0;
@@ -38,6 +34,7 @@ class _AssetState extends State<AssetWidget>
   void initState() {
     super.initState();
     _loadDefaultAddr();
+    _loadOep4Tokens();
     WalletManager.subscribe(this);
   }
 
@@ -134,6 +131,13 @@ class _AssetState extends State<AssetWidget>
       context,
       MaterialPageRoute(builder: (context) => WebViewScreen(url)),
     );
+  }
+
+  Future<void> _loadOep4Tokens() async {
+    var list = await Oep4Token.fetchList();
+    _safeSetState(() {
+      _oep4Tokens = list;
+    });
   }
 
   @override
@@ -308,11 +312,31 @@ class _AssetState extends State<AssetWidget>
               name: 'ONT',
               icon: 'graphics/ont.png',
               amount: _ont,
+              cb: (name) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          AssetTranserScreen(_addr, name, null, () {
+                            _updateBalance(_addr);
+                          })),
+                );
+              },
             ),
             _ListItemToken(
               name: 'ONG',
               icon: 'graphics/ong.png',
               amount: _ong,
+              cb: (name) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          AssetTranserScreen(_addr, name, null, () {
+                            _updateBalance(_addr);
+                          })),
+                );
+              },
             )
           ],
         ),
@@ -324,13 +348,14 @@ class _AssetState extends State<AssetWidget>
         ),
         Expanded(
             child: ListView.builder(
-          itemCount: oep4Tokens.length,
+          itemCount: _oep4Tokens.length,
           // shrinkWrap:true,
           itemExtent: 50,
           itemBuilder: (ctx, idx) {
-            var tok = oep4Tokens[idx];
-            return _ListItemToken(
-              name: tok,
+            var tok = _oep4Tokens[idx];
+            return _ListItemOep4Token(
+              _addr,
+              tok,
             );
           },
         ))
@@ -363,51 +388,39 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _ListItemToken extends StatelessWidget {
-  final String icon;
-  final String name;
-  final dynamic amount;
-  final String url;
+class _ListItemOep4Token extends StatelessWidget {
+  final String from;
+  final Oep4Token token;
 
-  _ListItemToken(
-      {this.name,
-      this.icon = 'graphics/oep4_token.png',
-      this.amount = -1,
-      this.url});
+  _ListItemOep4Token(this.from, this.token);
 
   @override
   Widget build(BuildContext context) {
     var border = Border(bottom: BorderSide(width: 0.5, color: Colors.grey));
 
     var children = <Widget>[
-      url != null
-          ? Image.network(url, width: 30)
-          : Image.asset(
-              icon,
-              width: 30,
-            ),
       Container(
+        width: 20,
         margin: EdgeInsets.only(left: 5),
+        child: token.logo.isEmpty
+            ? Image.asset(
+                'graphics/oep4_token.png',
+                width: 25,
+              )
+            : FadeInImage.assetNetwork(
+                placeholder: 'graphics/oep4_token.png',
+                image: token.logo,
+                width: 20,
+              ),
+      ),
+      Container(
+        margin: EdgeInsets.only(left: 10),
         child: Text(
-          name,
+          token.symbol,
           style: TextStyle(fontSize: 14),
         ),
       ),
     ];
-
-    if (amount >= 0) {
-      children.add(Expanded(
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: EdgeInsets.only(right: 8),
-            child: Text(amount is double
-                ? amount.toStringAsFixed(9)
-                : amount.toString()),
-          ),
-        ),
-      ));
-    }
 
     return ListTile(
       title: Container(
@@ -420,6 +433,75 @@ class _ListItemToken extends StatelessWidget {
         ),
       ),
       subtitle: null,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  AssetTranserScreen(from, null, token, () {})),
+        );
+      },
+    );
+  }
+}
+
+typedef NativeAssetClickCallback = Function(String name);
+
+class _ListItemToken extends StatelessWidget {
+  final String icon;
+  final String name;
+  final dynamic amount;
+  final NativeAssetClickCallback cb;
+
+  _ListItemToken(
+      {this.name,
+      this.icon = 'graphics/oep4_token.png',
+      this.amount = 0,
+      this.cb});
+
+  @override
+  Widget build(BuildContext context) {
+    var border = Border(bottom: BorderSide(width: 0.5, color: Colors.grey));
+
+    var children = <Widget>[
+      Image.asset(
+        icon,
+        width: 30,
+      ),
+      Container(
+        margin: EdgeInsets.only(left: 5),
+        child: Text(
+          name,
+          style: TextStyle(fontSize: 14),
+        ),
+      ),
+      Expanded(
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: Text(amount is double
+                ? amount.toStringAsFixed(9)
+                : amount.toString()),
+          ),
+        ),
+      )
+    ];
+
+    return ListTile(
+      title: Container(
+        height: 50,
+        decoration: new BoxDecoration(
+          border: border,
+        ),
+        child: Row(
+          children: children,
+        ),
+      ),
+      subtitle: null,
+      onTap: () {
+        cb(name);
+      },
     );
   }
 }

@@ -66,7 +66,7 @@ class _HomeState extends State<HomeScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // do something when resumed
-      _resetWallets();
+      // _resetWallets();
     }
   }
 
@@ -75,10 +75,10 @@ class _HomeState extends State<HomeScreen>
     await _initTabContents();
   }
 
-  Future<void> _resetWallets() async {
-    var wm = await WalletManager.sington();
-    await wm.reset();
-  }
+  // Future<void> _resetWallets() async {
+  //   var wm = await WalletManager.sington();
+  //   await wm.reset();
+  // }
 
   Future<void> _initTabContents() async {
     var children = [

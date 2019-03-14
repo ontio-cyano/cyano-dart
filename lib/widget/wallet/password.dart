@@ -35,7 +35,9 @@ class _InputPasswordBottomSheetState extends State<InputPasswordBottomSheet> {
       _passwordOK = err;
       _formKey.currentState.validate();
     });
-    widget.cb(pwdCtrl.text);
+    if (err.isEmpty) {
+      widget.cb(pwdCtrl.text);
+    }
   }
 
   @override

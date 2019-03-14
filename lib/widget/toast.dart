@@ -6,7 +6,7 @@ void toastSuccess(String msg) {
       msg: msg,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
-      timeInSecForIos: 2,
+      timeInSecForIos: 3,
       backgroundColor: Colors.green,
       textColor: Colors.white,
       fontSize: 14.0);
@@ -17,7 +17,7 @@ void toastError(String msg) {
       msg: msg,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
-      timeInSecForIos: 2,
+      timeInSecForIos: 5,
       backgroundColor: Colors.red,
       textColor: Colors.white,
       fontSize: 14.0);
@@ -28,7 +28,7 @@ void toastInfo(String msg) {
       msg: msg,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
-      timeInSecForIos: 2,
+      timeInSecForIos: 4,
       backgroundColor: Colors.blue,
       textColor: Colors.white,
       fontSize: 14.0);

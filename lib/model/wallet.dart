@@ -77,6 +77,7 @@ class WalletManager {
   }
 
   Future<void> save() async {
+    assert(_addr != null);
     await _storage.write(key: storeKey, value: jsonEncode(this));
   }
 
@@ -134,6 +135,20 @@ class WalletManager {
       return '';
     } on PlatformException catch (_) {
       return 'Invalid password';
+    } catch (e) {
+      return 'Invalid password';
+    }
+  }
+
+  static Future<String> validateAddress(String addr) async {
+    var err = 'Deformed address, please check it again';
+    try {
+      await Address.fromBase58(addr);
+      return '';
+    } on PlatformException catch (_) {
+      return err;
+    } catch (e) {
+      return err;
     }
   }
 

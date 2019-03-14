@@ -10,7 +10,7 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -19,7 +19,7 @@ dependencies:
   fluttertoast: ^3.0.3
   path_provider: ^0.4.1
   barcode_scan: ^0.0.4
-  qr_flutter: ^1.1.1
+  qr_flutter: ^2.0.0+51
   package_info: ^0.4.0+2
   ontology_dart_sdk: ^1.0.3
   validators: ^1.0.0+1
@@ -30,6 +30,8 @@ dependencies:
       ref: de16b83264fc4c1dce9101e016480c835c911e11
   flutter_svg: ^0.12.0
   event_bus: ^1.0.3
+  http: ^0.12.0+1
+  keyboard_actions: "^1.0.3"
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
