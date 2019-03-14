@@ -21,7 +21,7 @@ dependencies:
   barcode_scan: ^0.0.4
   qr_flutter: ^1.1.1
   package_info: ^0.4.0+2
-  ontology_dart_sdk: ^1.0.2
+  ontology_dart_sdk: ^1.0.3
   validators: ^1.0.0+1
   flutter_secure_storage: ^3.2.0
   flutter_webview_plugin: 

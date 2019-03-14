@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.cyan,
           styleTextUnderTheLoader: TextStyle(color: Colors.white),
           photoSize: 100.0,
-          onClick: () => print("Flutter Egypt"),
+          onClick: () {},
           loaderColor: Colors.white),
     );
   }

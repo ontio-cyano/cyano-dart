@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'password.dart';
-import '../../model/wallet.dart';
-import '../toast.dart';
+import 'package:cyano_dart/model/wallet.dart';
+import 'package:cyano_dart/widget/toast.dart';
 
 class ImportPrivateKeyScreen extends StatefulWidget {
   @override

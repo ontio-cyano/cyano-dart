@@ -1,7 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'address.dart';
-import 'package:ontology_dart_sdk/network.dart';
-import 'package:ontology_dart_sdk/crypto.dart';
+import 'package:cyano_dart/widget/wallet/wallets.dart';
+import 'package:cyano_dart/model/wallet.dart';
+import 'package:ontology_dart_sdk/wallet.dart';
+import 'package:cyano_dart/api.dart';
+import 'package:cyano_dart/model/network.dart';
+import 'package:cyano_dart/widget/wallet/password.dart';
+import 'package:cyano_dart/widget/toast.dart';
+import 'webview.dart';
 
 class AssetWidget extends StatefulWidget {
   @override
@@ -10,7 +17,8 @@ class AssetWidget extends StatefulWidget {
   }
 }
 
-class _AssetState extends State<AssetWidget> {
+class _AssetState extends State<AssetWidget>
+    with WalletManagerObserver, NetworkManagerObserver {
   final oep4Tokens = [
     'TNT',
     'OEP',
@@ -19,21 +27,113 @@ class _AssetState extends State<AssetWidget> {
     'LCY',
   ];
 
+  var _addr = '';
+  var _ont = 0;
+  double _ong = 0;
+  double _unClaimedOng = 0;
+
+  Timer _updateBalanceTimer;
+
   @override
   void initState() {
     super.initState();
-    _queryBalance();
+    _loadDefaultAddr();
+    WalletManager.subscribe(this);
   }
 
-  Future<void> _queryBalance() async {
-    print('querying balance...');
-    var rpc = WebsocketRpc('ws://polaris1.ont.io:20335');
-    rpc.connect();
-    var res = await rpc.getNodeCount();
-    print(res);
-    var prikey = PrivateKey.fromHex(
-        'e467a2a9c9f56b012c71cf2270df42843a9d7ff181934068b4a62bcdd570e8be');
-    print(await prikey.getWif());
+  @override
+  dispose() {
+    WalletManager.unsubscribe(this);
+    if (_updateBalanceTimer != null) _updateBalanceTimer.cancel();
+    super.dispose();
+  }
+
+  @override
+  onDefaultWalletChanged(Wallet w) {
+    var addr = w.accounts[0].address;
+    _safeSetState(() {
+      _addr = addr;
+    });
+    _updateBalanceAndSetTimer(addr);
+  }
+
+  @override
+  onWalletDeleted(Wallet w) {
+    var addr = w.accounts[0].address;
+    _safeSetState(() {
+      _addr = addr;
+    });
+    _updateBalanceAndSetTimer(addr);
+  }
+
+  @override
+  onNodeChanged(String node) {
+    _updateBalanceAndSetTimer(_addr);
+  }
+
+  _safeSetState(VoidCallback cb) {
+    if (!mounted) return;
+    setState(cb);
+  }
+
+  Future<void> _loadDefaultAddr() async {
+    var wm = await WalletManager.sington();
+    _safeSetState(() {
+      _addr = wm.defaultAddress;
+    });
+    _updateBalanceAndSetTimer(wm.defaultAddress);
+  }
+
+  Future<void> _updateBalance(String addr) async {
+    var b = await queryBalance(_addr);
+    _safeSetState(() {
+      _ont = b.ont;
+      _ong = b.ong;
+      _unClaimedOng = b.unClaimedOng;
+    });
+  }
+
+  void _setupUpdateBalanceTimer(String addr) {
+    if (_updateBalanceTimer != null) {
+      _updateBalanceTimer.cancel();
+    }
+    _updateBalanceTimer = Timer.periodic(new Duration(seconds: 10), (timer) {
+      _updateBalance(addr);
+    });
+  }
+
+  Future<void> _updateBalanceAndSetTimer(String addr) async {
+    _updateBalance(addr);
+    _setupUpdateBalanceTimer(addr);
+  }
+
+  Future<void> _claimOng(String addr, String pwd) async {
+    try {
+      Navigator.pop(context);
+      await claimOng(addr, pwd);
+      toastSuccess('Claiming succeeds');
+      _updateBalance(addr);
+    } catch (e) {
+      toastError('Unable to claim, please try it again later');
+    }
+  }
+
+  Future<void> _navToExplor() async {
+    var nm = await NetworkManager.sington();
+    var url = '';
+    if (nm.isMain) {
+      url = "https://explorer.ont.io/address/$_addr/20/1/";
+    } else if (nm.isTest) {
+      url = "https://explorer.ont.io/address/$_addr/20/1/testnet";
+    }
+    if (url == '') {
+      toastInfo('No transactions view for private network');
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => WebViewScreen(url)),
+    );
   }
 
   @override
@@ -55,7 +155,7 @@ class _AssetState extends State<AssetWidget> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'ANt6oJMEZBwCLbg5Dd6Pg3pxAs7FbJHSRY',
+                      _addr,
                       style: TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),
@@ -82,8 +182,7 @@ class _AssetState extends State<AssetWidget> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => AddressScreen(
-                              'ANt6oJMEZBwCLbg5Dd6Pg3pxAs7FbJHSRY')),
+                          builder: (context) => AddressScreen(_addr)),
                     );
                   },
                 ),
@@ -119,7 +218,11 @@ class _AssetState extends State<AssetWidget> {
                       ),
                     ),
                     onTap: () {
-                      print('manage');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => WalletsScreen()),
+                      );
                     },
                   ),
                 ),
@@ -145,7 +248,7 @@ class _AssetState extends State<AssetWidget> {
                       ),
                     ),
                     onTap: () {
-                      print('transaction');
+                      _navToExplor();
                     },
                   ),
                 ),
@@ -176,9 +279,18 @@ class _AssetState extends State<AssetWidget> {
                     borderRadius: new BorderRadius.circular(3.0)),
                 textColor: Colors.white,
                 color: Colors.cyan,
-                onPressed: () {},
+                onPressed: () {
+                  if (_unClaimedOng == 0) return;
+                  showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return InputPasswordBottomSheet(_addr, (pwd) {
+                          _claimOng(_addr, pwd);
+                        });
+                      });
+                },
                 child: new Text(
-                  "CLAIM ONG: 0",
+                  "CLAIM ONG: $_unClaimedOng",
                   style: TextStyle(fontSize: 12),
                 ),
                 highlightElevation: 1.2,
@@ -195,12 +307,12 @@ class _AssetState extends State<AssetWidget> {
             _ListItemToken(
               name: 'ONT',
               icon: 'graphics/ont.png',
-              amount: 0,
+              amount: _ont,
             ),
             _ListItemToken(
               name: 'ONG',
               icon: 'graphics/ong.png',
-              amount: 0,
+              amount: _ong,
             )
           ],
         ),
@@ -254,7 +366,7 @@ class _SectionHeader extends StatelessWidget {
 class _ListItemToken extends StatelessWidget {
   final String icon;
   final String name;
-  final int amount;
+  final dynamic amount;
   final String url;
 
   _ListItemToken(
@@ -289,7 +401,9 @@ class _ListItemToken extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: Padding(
             padding: EdgeInsets.only(right: 8),
-            child: Text('0'),
+            child: Text(amount is double
+                ? amount.toStringAsFixed(9)
+                : amount.toString()),
           ),
         ),
       ));

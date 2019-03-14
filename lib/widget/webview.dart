@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
@@ -163,7 +162,8 @@ class _BackButton extends StatelessWidget {
       icon: const Icon(Icons.arrow_back_ios),
       onPressed: () async {
         var prev = await _wv.evalJavascript('location.href');
-        await _wv.evalJavascript('window.history.go(-1);');
+        await _wv.goBack();
+        await new Future.delayed(const Duration(milliseconds: 100));
         var after = await _wv.evalJavascript('location.href');
         if (prev == after) {
           _wv.close();

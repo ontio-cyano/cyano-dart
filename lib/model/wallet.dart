@@ -1,49 +1,72 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:event_bus/event_bus.dart';
 import 'package:ontology_dart_sdk/wallet.dart';
 import 'package:ontology_dart_sdk/crypto.dart';
-import 'dart:convert';
 
-final storage = new FlutterSecureStorage();
+final _storage = new FlutterSecureStorage();
 
-class WalletCreatedEvent {
-  Wallet wallet;
-  WalletCreatedEvent(this.wallet);
+mixin WalletManagerObserver {
+  onWalletCreated(Wallet w) {}
+  onWalletReset() {}
+  onDefaultWalletChanged(Wallet w) {}
+  onWalletDeleted(Wallet w) {}
 }
 
-class WalletsResetEvent {}
-
 class WalletManager {
-  static var eventBus = new EventBus();
+  static final observers = Set<WalletManagerObserver>();
+
+  static subscribe(WalletManagerObserver obsr) {
+    if (observers.contains(obsr)) return;
+    observers.add(obsr);
+  }
+
+  static unsubscribe(WalletManagerObserver obsr) {
+    observers.remove(obsr);
+  }
 
   static final storeKey = 'wallet-manager';
   static WalletManager _inst;
 
-  var cur = '';
-  var wallets = <Wallet>[];
+  var _addr = '';
+  var _wallets = <Wallet>[];
+
+  List<Wallet> get wallets {
+    return _wallets.sublist(0);
+  }
 
   WalletManager._internal();
 
   WalletManager.fromJson(Map<String, dynamic> json) {
-    cur = json['cur'];
+    _addr = json['addr'];
 
     List<dynamic> wallets = json['wallets'] ?? [];
-    wallets.forEach((w) => this.wallets.add(Wallet.fromJson(w)));
+    wallets.forEach((w) => this._wallets.add(Wallet.fromJson(w)));
   }
 
   Map<String, dynamic> toJson() => {
-        'cur': cur,
-        'wallets': wallets,
+        'addr': _addr,
+        'wallets': _wallets,
       };
 
   bool get isEmpty {
-    return wallets.length == 0;
+    return _wallets.length == 0;
+  }
+
+  // through this app we use a one-address-per-wallet strategy
+  // so using the address of first account within the wallet to find a wallet
+  Wallet findWalletByAddress(String address) {
+    return _wallets.where((w) => w.accounts[0].address == address).first;
+  }
+
+  String get defaultAddress {
+    return _addr;
   }
 
   static Future<WalletManager> sington() async {
     if (_inst != null) return _inst;
 
-    var raw = await storage.read(key: storeKey);
+    var raw = await _storage.read(key: storeKey);
     if (raw == null) {
       _inst = WalletManager._internal();
       await _inst.save();
@@ -54,7 +77,7 @@ class WalletManager {
   }
 
   Future<void> save() async {
-    await storage.write(key: storeKey, value: jsonEncode(this));
+    await _storage.write(key: storeKey, value: jsonEncode(this));
   }
 
   Future<void> create(String pwd, {String name}) async {
@@ -62,28 +85,70 @@ class WalletManager {
     var prikey = await PrivateKey.random();
     var acc = await Account.create(pwd, prikey: prikey);
     w.addAccount(acc);
-    if (w.name == null) w.name = acc.label;
-    wallets.add(w);
-    if (cur == '') cur = w.name;
+    w.name = acc.label;
+    _wallets.add(w);
+    if (_addr == '') _addr = acc.address;
     await save();
-    eventBus.fire(WalletCreatedEvent(w));
+    observers.forEach((obsr) => obsr.onWalletCreated(w));
   }
 
   Future<void> import(String wif, String pwd) async {
     var acc = await Account.fromWif(wif, pwd);
     var w = Wallet(acc.label);
     w.addAccount(acc);
-    wallets.add(w);
+    _wallets.add(w);
+    w.name = acc.label;
+    if (_addr == '') _addr = acc.address;
     await save();
-    eventBus.fire(WalletCreatedEvent(w));
+    observers.forEach((obsr) => obsr.onWalletCreated(w));
   }
 
   Future<void> reset() async {
-    var w = WalletManager._internal();
-    await w.save();
-    cur = '';
-    wallets.clear();
+    _addr = '';
+    _wallets.clear();
+    await save();
     _inst = null;
-    eventBus.fire(WalletsResetEvent());
+    observers.forEach((obsr) => obsr.onWalletReset());
+  }
+
+  Future<void> setDefaultByAddress(String addr) async {
+    var w = findWalletByAddress(addr);
+    if (w == null) return;
+    _addr = addr;
+    await save();
+    observers.forEach((obsr) => obsr.onDefaultWalletChanged(w));
+  }
+
+  Account findAccountByAddr(String addr) {
+    for (var w in _wallets) {
+      if (w.accounts[0].address == addr) return w.accounts[0];
+    }
+    return null;
+  }
+
+  Future<String> verifyAccountPwd(String addr, String pwd) async {
+    var acc = findAccountByAddr(addr);
+    if (acc == null) return 'Cannot find account';
+    try {
+      await acc.decrypt(pwd);
+      return '';
+    } on PlatformException catch (_) {
+      return 'Invalid password';
+    }
+  }
+
+  Future<void> deleteWallet(String addr) async {
+    var w = findWalletByAddress(addr);
+    if (w == null) return;
+    _wallets.remove(w);
+    if (_addr == addr) {
+      if (_wallets.length > 0) {
+        _addr = _wallets[0].accounts[0].address;
+      } else {
+        _addr = '';
+      }
+    }
+    await save();
+    observers.forEach((obsr) => obsr.onWalletDeleted(w));
   }
 }

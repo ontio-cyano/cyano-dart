@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:barcode_scan/barcode_scan.dart';
+import 'package:ontology_dart_sdk/wallet.dart';
 import 'asset.dart';
 import 'holder.dart';
 import 'setting.dart';
 import 'toast.dart';
 import 'wallet.dart';
-import '../model/wallet.dart';
+import 'package:cyano_dart/model/wallet.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -16,7 +17,8 @@ class HomeScreen extends StatefulWidget {
   }
 }
 
-class _HomeState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeState extends State<HomeScreen>
+    with WidgetsBindingObserver, WalletManagerObserver {
   int _curIdx = 0;
   var _preCached = false;
 
@@ -25,9 +27,6 @@ class _HomeState extends State<HomeScreen> with WidgetsBindingObserver {
     HolderWidget(Colors.white),
     HolderWidget(Colors.white),
   ];
-
-  StreamSubscription<WalletCreatedEvent> _onWalletCreated;
-  StreamSubscription<WalletsResetEvent> _onWalletsReset;
 
   @override
   void initState() {
@@ -39,21 +38,28 @@ class _HomeState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    WalletManager.unsubscribe(this);
     super.dispose();
-
-    if (_onWalletCreated != null) _onWalletCreated.cancel();
-    if (_onWalletsReset != null) _onWalletsReset.cancel();
   }
 
-  void _observeWalletChanges() {
-    _onWalletCreated =
-        WalletManager.eventBus.on<WalletCreatedEvent>().listen((w) {
-      _initTabContents();
-    });
-    _onWalletsReset =
-        WalletManager.eventBus.on<WalletsResetEvent>().listen((w) {
-      _initTabContents();
-    });
+  @override
+  onWalletReset() {
+    _initTabContents();
+  }
+
+  @override
+  onDefaultWalletChanged(Wallet w) {
+    _initTabContents();
+  }
+
+  @override
+  onWalletDeleted(Wallet w) {
+    _initTabContents();
+  }
+
+  @override
+  onWalletCreated(Wallet w) {
+    _initTabContents();
   }
 
   @override
@@ -65,7 +71,7 @@ class _HomeState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _init() async {
-    _observeWalletChanges();
+    WalletManager.subscribe(this);
     await _initTabContents();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:validators/validators.dart';
 import 'toast.dart';
+import 'package:cyano_dart/model/network.dart';
 
 class NodeSelectionScreen extends StatefulWidget {
   @override
@@ -9,29 +10,51 @@ class NodeSelectionScreen extends StatefulWidget {
   }
 }
 
-class _NodeSelectionState extends State<NodeSelectionScreen> {
-  final _mainNodes = [
-    'http://dappnode1.ont.io',
-    'http://dappnode2.ont.io',
-    'http://dappnode3.ont.io',
-    'http://dappnode4.ont.io'
-  ];
+class _NodeSelectionState extends State<NodeSelectionScreen>
+    with NetworkManagerObserver {
+  final _mainNodes = NetworkManager.mainNodes;
+  final _testNodes = NetworkManager.testNodes;
 
-  final _testNodes = [
-    'http://polaris1.ont.io',
-    'http://polaris2.ont.io',
-    'http://polaris3.ont.io',
-    'http://polaris4.ont.io',
-    'http://polaris5.ont.io',
-  ];
-
-  var _privateNode = 'http://127.0.0.1';
-
+  var _privateNode = '';
   var _scrollCtrl = ScrollController(initialScrollOffset: 0);
-
   var _selectedNode = '';
-
   var _privateUrlCtrl = new TextEditingController(text: '');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNodes();
+    NetworkManager.subscribe(this);
+  }
+
+  @override
+  void dispose() {
+    NetworkManager.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  onNodeChanged(String node) {
+    _loadNodes();
+  }
+
+  @override
+  onPrivateNodeChanged(String node) {
+    toastSuccess('Change private network succeeds');
+  }
+
+  Future<void> _loadNodes() async {
+    var nw = await NetworkManager.sington();
+    setState(() {
+      _selectedNode = nw.defaultNode;
+      _privateNode = nw.privateNode;
+    });
+  }
+
+  Future<void> _changeNode(node) async {
+    var nw = await NetworkManager.sington();
+    await nw.setDefaultNode(node);
+  }
 
   List<Widget> get _mainNodeViews {
     var views = <Widget>[
@@ -42,9 +65,7 @@ class _NodeSelectionState extends State<NodeSelectionScreen> {
     return views +
         _mainNodes
             .map((n) => _ListItemNode(n, n == _selectedNode, (url) {
-                  setState(() {
-                    _selectedNode = url;
-                  });
+                  _changeNode(url);
                 }))
             .toList();
   }
@@ -58,9 +79,7 @@ class _NodeSelectionState extends State<NodeSelectionScreen> {
     return views +
         _testNodes
             .map((n) => _ListItemNode(n, n == _selectedNode, (url) {
-                  setState(() {
-                    _selectedNode = url;
-                  });
+                  _changeNode(url);
                 }))
             .toList();
   }
@@ -71,9 +90,7 @@ class _NodeSelectionState extends State<NodeSelectionScreen> {
         title: 'Private Net',
       ),
       _ListItemNode(_privateNode, _privateNode == _selectedNode, (url) {
-        setState(() {
-          _selectedNode = url;
-        });
+        _changeNode(url);
       }),
       Container(
         margin: EdgeInsets.only(left: 20, right: 20),
@@ -85,6 +102,8 @@ class _NodeSelectionState extends State<NodeSelectionScreen> {
           decoration: InputDecoration(
               hintText: 'Please enter the address of your private network'),
           onSubmitted: (val) {
+            if (val.isEmpty) return;
+
             var ok = _mainNodes.indexOf(val) == -1 &&
                 _testNodes.indexOf(val) == -1 &&
                 isURL(val, {
@@ -128,36 +147,11 @@ class _NodeSelectionState extends State<NodeSelectionScreen> {
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollCtrl,
-                child: Column(children: children
-                    // <Widget>[
-                    // _SectionHeader(
-                    // title: 'Main Net',
-                    // ),
-
-                    // ListView.builder(
-                    // shrinkWrap: true,
-                    // padding: EdgeInsets.all(0),
-                    // itemExtent: 50,
-                    // itemCount: _mainNodes.length,
-                    // itemBuilder: (ctx, idx) {
-                    // return _ListItemNode(_mainNodes[idx]);
-                    // },
-                    // ),
-                    // _SectionHeader(
-                    // title: 'Test Net',
-                    // ),
-                    // ListView.builder(
-                    // shrinkWrap: true,
-                    // padding: EdgeInsets.all(0),
-                    // itemExtent: 50,
-                    // itemCount: _testNodes.length,
-                    // itemBuilder: (ctx, idx) {
-                    // return _ListItemNode(_testNodes[idx]);
-                    // },
-                    // )
-                    // ],
-                    ),
+                child: Column(children: children),
               ),
+            ),
+            Container(
+              height: 30,
             )
           ],
         ));

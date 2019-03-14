@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'password.dart';
-import 'package:ontology_dart_sdk/wallet.dart';
-import 'package:ontology_dart_sdk/crypto.dart';
-import '../../model/wallet.dart';
-import '../toast.dart';
+import 'package:cyano_dart/model/wallet.dart';
+import 'package:cyano_dart/widget/toast.dart';
 
 class NewWalletScreen extends StatefulWidget {
   @override
@@ -18,7 +16,7 @@ class _NewWalletState extends State<NewWalletScreen> {
 
   Future<void> _create() async {
     var wm = await WalletManager.sington();
-    await wm.create(_pwdCtrl.text, name: 'Default');
+    await wm.create(_pwdCtrl.text);
     toastSuccess('Creation succeeds');
     Navigator.pop(context);
   }

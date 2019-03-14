@@ -26,7 +26,7 @@ class CreateWalletWidget extends StatelessWidget {
                 margin: EdgeInsets.only(top: 15),
                 width: 350,
                 child: Text(
-                  'An Ontology wallet . To start using Ontology , you can create new account or import existing.',
+                  'An Ontology wallet. For using Ontology, you would create a new account or import an existing one.',
                   style: TextStyle(fontSize: 13),
                 ),
               ),
