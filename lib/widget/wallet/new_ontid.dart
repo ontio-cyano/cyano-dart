@@ -16,8 +16,9 @@ class _NewOntIdState extends State<NewOntIdScreen> {
       var wm = await WalletManager.sington();
       await wm.createIdentity(pwd);
       toastSuccess('Creation succeeds');
+      Navigator.pop(context);
     } catch (e) {
-      toastSuccess('Failed to create identity: ' + e.toString());
+      toastError('Failed to create identity: ' + e.toString());
     }
   }
 

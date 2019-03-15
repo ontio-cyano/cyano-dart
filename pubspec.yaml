@@ -24,6 +24,11 @@ dependencies:
   ontology_dart_sdk: ^1.0.3
   validators: ^1.0.0+1
   flutter_secure_storage: ^3.2.0
+  webview_flutter: 
+    git: 
+      url: git://github.com/flutter/plugins.git
+      path: packages/webview_flutter
+      ref: f30ef67deacea56693d50dacccae7e54fa7ca897
   flutter_webview_plugin: 
     git:
       url: git://github.com/Yaxian/flutter_webview_plugin.git

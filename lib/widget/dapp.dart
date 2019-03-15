@@ -63,7 +63,7 @@ class _DappState extends State<DAppWidget> with DebugHistoryObserver {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => WebViewScreen(url), fullscreenDialog: true),
+          builder: (context) => WebViewWidget(url), fullscreenDialog: true),
     );
   }
 
@@ -101,7 +101,7 @@ class _DappState extends State<DAppWidget> with DebugHistoryObserver {
             children: <Widget>[
               Container(
                 height: 50,
-                margin: EdgeInsets.only(top: 20),
+                margin: EdgeInsets.only(top: 15),
                 child: Center(
                   child: SizedBox(
                     width: 50,
@@ -118,10 +118,13 @@ class _DappState extends State<DAppWidget> with DebugHistoryObserver {
                 bottom: 0,
                 left: 0,
                 width: w,
-                height: 10,
+                height: 15,
                 child: Container(
                   child: Center(
-                    child: Text(app['name']),
+                    child: Text(
+                      app['name'],
+                      style: TextStyle(fontSize: 13),
+                    ),
                   ),
                 ),
               )

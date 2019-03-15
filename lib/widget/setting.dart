@@ -4,6 +4,7 @@ import 'select_node.dart';
 import 'webview.dart';
 import 'package:cyano_dart/model/wallet.dart';
 import 'package:cyano_dart/widget/wallet/new_ontid.dart';
+import 'toast.dart';
 
 class SettingWidget extends StatefulWidget {
   @override
@@ -41,7 +42,7 @@ class _SettingState extends State<SettingWidget> {
                 itemExtent: 50,
                 children: <Widget>[
                   _SettingItem(
-                    name: 'ONT Identities',
+                    name: 'ONT Identity',
                     icon: 'graphics/tab_id_un_selected.png',
                   ),
                   _SettingItem(
@@ -73,6 +74,11 @@ class _SettingItem extends StatelessWidget {
 
   Future<void> _nav2OntId(BuildContext context) async {
     var wm = await WalletManager.sington();
+    print(111);
+    if (wm.isEmpty) {
+      toastInfo('Please create a wallet at first');
+      return;
+    }
     if (!wm.hasOntId) {
       Navigator.push(
           context,
@@ -83,7 +89,7 @@ class _SettingItem extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => WebViewScreen(
+            builder: (context) => WebViewWidget(
                 "https://auth.ont.io/#/mgmtHome?ontid=${wm.ontid.ontid}")),
       );
     }
@@ -135,14 +141,8 @@ class _SettingItem extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (context) => NodeSelectionScreen()),
           );
-        } else if (name == 'ONT Identities') {
+        } else if (name == 'ONT Identity') {
           _nav2OntId(context);
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //       builder: (context) => WebViewScreen(
-          //           'https://auth.ont.io/#/mgmtHome?ontid=did:ont:Aaqase8cE4DkatKkvpQcJYaGVKvYSCPoFD')),
-          // );
         }
       },
     );

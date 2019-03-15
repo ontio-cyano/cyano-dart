@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cyano_dart/model/wallet.dart';
 
@@ -6,6 +7,24 @@ String validatePassword(String pwd) {
   if (pwd.length < 6) return 'Password is too short, min length is 6';
   if (pwd.length > 20) return 'Password is too long, max length is 20';
   return null;
+}
+
+Future<String> askUserPassword(BuildContext context, {String addr}) async {
+  if (addr == null) {
+    var wm = await WalletManager.sington();
+    addr = wm.defaultAddress;
+  }
+
+  var completer = Completer<String>();
+  showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return InputPasswordBottomSheet(addr, (pwd) {
+          completer.complete(pwd);
+          Navigator.pop(context);
+        });
+      });
+  return completer.future;
 }
 
 typedef PasswordOKCallback = Function(String pwd);

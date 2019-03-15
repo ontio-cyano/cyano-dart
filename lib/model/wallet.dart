@@ -110,6 +110,8 @@ class WalletManager {
 
   Future<void> import(String wif, String pwd) async {
     var acc = await Account.fromWif(wif, pwd);
+    var old = findWalletByAddress(acc.address);
+    if (old != null) return;
     var w = Wallet(acc.label);
     w.addAccount(acc);
     _wallets.add(w);
@@ -199,9 +201,12 @@ class WalletManager {
 
     var rpc = WebsocketRpc(await rpcAddress());
     rpc.connect();
-    await rpc.sendRawTx(await tx.serialize(), preExec: false);
+    try {
+      await rpc.sendRawTx(await tx.serialize(), preExec: false);
+    } catch (e) {
+      if (!e.toString().contains('already registered')) throw e;
+    }
     rpc.close();
-
     var w = findWalletByAddress(_addr);
     w.addIdentity(id);
     await save();

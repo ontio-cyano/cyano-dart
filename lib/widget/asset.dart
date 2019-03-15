@@ -125,7 +125,7 @@ class _AssetState extends State<AssetWidget>
     }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => WebViewScreen(url)),
+      MaterialPageRoute(builder: (context) => WebViewWidget(url)),
     );
   }
 
