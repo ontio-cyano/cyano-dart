@@ -5,6 +5,7 @@ import 'new_wallet.dart';
 import 'import_prikey.dart';
 import 'package:cyano_dart/widget/toast.dart';
 import 'password.dart';
+import 'package:flutter/services.dart';
 
 class WalletsScreen extends StatefulWidget {
   @override
@@ -67,6 +68,78 @@ class _WalletsState extends State<WalletsScreen> with WalletManagerObserver {
     Navigator.pop(context);
   }
 
+  Future<void> _copy(String wif) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: wif));
+      toastSuccess('WIF copy succeeds');
+    } catch (e) {
+      toastError('Unable to copy WIF' + e.toString());
+    }
+  }
+
+  Future<void> _exportWIF(Wallet w, String pwd) async {
+    Navigator.pop(context);
+
+    var wif = '';
+
+    try {
+      var wm = await WalletManager.sington();
+      wif = await wm.exportWIF(w, pwd);
+    } catch (e) {
+      toastError('Failed to export WIF, please try it again later');
+    }
+
+    if (wif.isEmpty) return;
+
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            height: 300,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  // margin: EdgeInsets.only(top: 30),
+                  child: Text(
+                    'WIF:',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width - 40,
+                    margin: EdgeInsets.only(top: 20),
+                    child: Text(wif),
+                  ),
+                ),
+                Container(
+                  height: 20,
+                ),
+                RaisedButton(
+                  padding: const EdgeInsets.all(8.0),
+                  shape: new RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(3.0)),
+                  textColor: Colors.white,
+                  color: Colors.cyan,
+                  onPressed: () {
+                    _copy(wif);
+                  },
+                  child: new Text(
+                    "Copy",
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  highlightElevation: 1.2,
+                )
+              ],
+            ),
+          );
+        });
+  }
+
   Widget _buildBottomSheetBtn(
       BuildContext context, String title, VoidCallback action) {
     return Container(
@@ -101,7 +174,16 @@ class _WalletsState extends State<WalletsScreen> with WalletManagerObserver {
           Container(
             height: 10,
           ),
-          _buildBottomSheetBtn(context, 'EXPORT WALLET', () {}),
+          _buildBottomSheetBtn(context, 'EXPORT WALLET', () {
+            Navigator.pop(context);
+            showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return InputPasswordBottomSheet(w.accounts[0].address, (pwd) {
+                    _exportWIF(w, pwd);
+                  });
+                });
+          }),
           Container(
             height: 10,
           ),

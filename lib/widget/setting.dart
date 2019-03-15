@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
 import 'select_node.dart';
 import 'webview.dart';
+import 'package:cyano_dart/model/wallet.dart';
+import 'package:cyano_dart/widget/wallet/new_ontid.dart';
 
 class SettingWidget extends StatefulWidget {
   @override
@@ -69,6 +71,24 @@ class _SettingItem extends StatelessWidget {
 
   _SettingItem({this.name, this.icon});
 
+  Future<void> _nav2OntId(BuildContext context) async {
+    var wm = await WalletManager.sington();
+    if (!wm.hasOntId) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NewOntIdScreen(),
+          ));
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => WebViewScreen(
+                "https://auth.ont.io/#/mgmtHome?ontid=${wm.ontid.ontid}")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var border = Border(bottom: BorderSide(width: 0.5, color: Colors.grey));
@@ -116,12 +136,13 @@ class _SettingItem extends StatelessWidget {
             MaterialPageRoute(builder: (context) => NodeSelectionScreen()),
           );
         } else if (name == 'ONT Identities') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => WebViewScreen(
-                    'https://auth.ont.io/#/mgmtHome?ontid=did:ont:Aaqase8cE4DkatKkvpQcJYaGVKvYSCPoFD')),
-          );
+          _nav2OntId(context);
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //       builder: (context) => WebViewScreen(
+          //           'https://auth.ont.io/#/mgmtHome?ontid=did:ont:Aaqase8cE4DkatKkvpQcJYaGVKvYSCPoFD')),
+          // );
         }
       },
     );

@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:ontology_dart_sdk/network.dart';
 import 'package:ontology_dart_sdk/Crypto.dart';
 import 'model/network.dart';
 import 'package:ontology_dart_sdk/neocore.dart';
 import 'package:cyano_dart/model/wallet.dart';
+import 'package:http/http.dart' as http;
 
 class Balance {
   int ont = 0;
@@ -76,4 +78,16 @@ Future<void> claimOng(String addr, String pwd) async {
 
   await rpc.sendRawTx(await tx.serialize(), preExec: false);
   rpc.close();
+}
+
+const bannerSrvUrl = 'http://101.132.193.149:4027/dapps';
+
+Future<dynamic> fetchApps() async {
+  final response = await http.get(bannerSrvUrl);
+  if (response.statusCode != 200) throw Exception('Failed to laod banners');
+
+  var resp = json.decode(response.body);
+  if (resp['error'] != 0) throw Exception('Service error: ' + resp['desc']);
+
+  return resp['result'];
 }

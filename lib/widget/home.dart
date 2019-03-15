@@ -9,6 +9,7 @@ import 'setting.dart';
 import 'toast.dart';
 import 'wallet.dart';
 import 'package:cyano_dart/model/wallet.dart';
+import 'dapp.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -81,11 +82,7 @@ class _HomeState extends State<HomeScreen>
   // }
 
   Future<void> _initTabContents() async {
-    var children = [
-      AssetWidget(),
-      HolderWidget(Colors.deepOrange),
-      SettingWidget()
-    ];
+    var children = <Widget>[AssetWidget(), DAppWidget(), SettingWidget()];
     var wm = await WalletManager.sington();
     if (wm.isEmpty) {
       children[0] = CreateWalletWidget();

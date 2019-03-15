@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ontology_dart_sdk/wallet.dart';
 import 'package:ontology_dart_sdk/crypto.dart';
+import 'package:ontology_dart_sdk/neocore.dart';
+import 'package:ontology_dart_sdk/network.dart';
+import 'package:cyano_dart/api.dart';
 
 final _storage = new FlutterSecureStorage();
 
@@ -11,6 +14,7 @@ mixin WalletManagerObserver {
   onWalletReset() {}
   onDefaultWalletChanged(Wallet w) {}
   onWalletDeleted(Wallet w) {}
+  onIdentityCreated(Identity id) {}
 }
 
 class WalletManager {
@@ -51,6 +55,17 @@ class WalletManager {
 
   bool get isEmpty {
     return _wallets.length == 0;
+  }
+
+  bool get hasOntId {
+    var w = findWalletByAddress(_addr);
+    if (w == null) return false;
+    return w.identities.length > 0;
+  }
+
+  Identity get ontid {
+    var w = findWalletByAddress(_addr);
+    return w?.identities[0];
   }
 
   // through this app we use a one-address-per-wallet strategy
@@ -165,5 +180,37 @@ class WalletManager {
     }
     await save();
     observers.forEach((obsr) => obsr.onWalletDeleted(w));
+  }
+
+  /// creates an identity under currently selected address
+  Future<void> createIdentity(String pwd) async {
+    var acc = findAccountByAddr(_addr);
+    var prikey = await acc.decrypt(pwd);
+    var pubkey = PublicKey.fromHex(acc.publicKey);
+    var ontid = await Address.generateOntId(pubkey);
+    var id = Identity(ontid, acc.label, false, false);
+
+    var b = OntidTxBuilder();
+    var tx = await b.buildRegisterOntidTx(
+        ontid, pubkey, 500, 200000, await Address.fromBase58(_addr));
+
+    var txb = TxBuilder();
+    await txb.sign(tx, prikey);
+
+    var rpc = WebsocketRpc(await rpcAddress());
+    rpc.connect();
+    await rpc.sendRawTx(await tx.serialize(), preExec: false);
+    rpc.close();
+
+    var w = findWalletByAddress(_addr);
+    w.addIdentity(id);
+    await save();
+    observers.forEach((obsr) => obsr.onIdentityCreated(id));
+  }
+
+  Future<String> exportWIF(Wallet w, String pwd) async {
+    var acc = w.accounts[0];
+    var prikey = await acc.decrypt(pwd);
+    return prikey.getWif();
   }
 }

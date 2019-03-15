@@ -44,7 +44,6 @@ class _InputPasswordBottomSheetState extends State<InputPasswordBottomSheet> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // height: 300,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[

@@ -48,10 +48,15 @@ class _AssetTransferState extends State<AssetTranserScreen> {
     _loadBalance();
   }
 
+  _safeSetState(VoidCallback cb) {
+    if (!mounted) return;
+    setState(cb);
+  }
+
   Future<void> _loadBalance() async {
     if (widget.isNativeAsset) {
       var b = await queryBalance(widget.from);
-      setState(() {
+      _safeSetState(() {
         _balance = widget.nativeAsset == 'ONT' ? b.ont : b.ong;
       });
     } else {
@@ -65,7 +70,7 @@ class _AssetTransferState extends State<AssetTranserScreen> {
 
   Future<void> _validateRecvAddr() async {
     var err = await WalletManager.validateAddress(_recvCtrl.text);
-    setState(() {
+    _safeSetState(() {
       _rectAddrErr = err;
     });
   }
@@ -94,7 +99,7 @@ class _AssetTransferState extends State<AssetTranserScreen> {
         // dismiss loading modal
         Navigator.pop(context);
         toastSuccess('Transfer succeeds');
-         Navigator.pop(context);
+        Navigator.pop(context);
       } catch (e) {
         // dismiss loading modal
         Navigator.pop(context);

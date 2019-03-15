@@ -56,11 +56,7 @@ class _AssetState extends State<AssetWidget>
 
   @override
   onWalletDeleted(Wallet w) {
-    var addr = w.accounts[0].address;
-    _safeSetState(() {
-      _addr = addr;
-    });
-    _updateBalanceAndSetTimer(addr);
+    _loadDefaultAddr();
   }
 
   @override

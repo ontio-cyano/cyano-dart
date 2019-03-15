@@ -97,7 +97,8 @@ class Oep4Token {
         : BigInt.parse(res['Result']);
   }
 
-  Future<void> transfer( String from, String pwd, String to, String amount) async {
+  Future<void> transfer(
+      String from, String pwd, String to, String amount) async {
     var ad = double.parse(amount);
     var ai = BigInt.from(ad) * BigInt.from(decimals);
 
