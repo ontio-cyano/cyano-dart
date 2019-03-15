@@ -10,6 +10,7 @@ import 'toast.dart';
 import 'wallet.dart';
 import 'package:cyano_dart/model/wallet.dart';
 import 'dapp.dart';
+import 'package:cyano_dart/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -110,10 +111,20 @@ class _HomeState extends State<HomeScreen>
     _preCached = true;
   }
 
+    Providor _providor;
+
+  Providor get providor {
+    if (_providor == null) {
+      _providor = Providor(context);
+      _providor.addSender(HttpResponseSender());
+    }
+    return _providor;
+  }
+
   Future<void> _scan() async {
     try {
       String barcode = await BarcodeScanner.scan();
-      print(barcode);
+      await providor.process(barcode);
     } catch (e) {
       toastError('Unable to open camera');
     }

@@ -71,7 +71,7 @@ class WalletManager {
   // through this app we use a one-address-per-wallet strategy
   // so using the address of first account within the wallet to find a wallet
   Wallet findWalletByAddress(String address) {
-    return _wallets.where((w) => w.accounts[0].address == address).first;
+    return _wallets.firstWhere((w) => w.accounts[0].address == address,orElse: () => null);
   }
 
   String get defaultAddress {
