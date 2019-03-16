@@ -1,16 +1,19 @@
-# cyano_dart
+# Cyano in Dart
 
-A new Flutter project.
+Yet another Cyano implementation, written in Flutter&Dartlang. It's compliant with the [Cyano Enhancement Proposals](https://github.com/ontio-cyano/CEPs).
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Install flutter, [link](https://flutter.dev/docs/get-started/install)
+2. Setup VSCode, [link](https://flutter.dev/docs/get-started/editor?tab=vscode)
+3. Use VSCode to open your clone, accept the suggestions to resolve dependencies
+4. Press `F5` to debug
 
-A few resources to get you started if this is your first Flutter project:
+## Android
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+It only runs on iOS now and can be ported to Android easily. For an Android porting, these requirements need to be satisfied:
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+1. Crypto related methods
+2. Because Android does not have a default keyboard, so a soft keyboard is important for keeping input security
+3. Keyboard behaves weird in WebViews on Android, see [here](https://github.com/flutter/flutter/issues/19718)
+
